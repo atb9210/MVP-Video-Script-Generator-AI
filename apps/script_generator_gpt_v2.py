@@ -67,8 +67,8 @@ FORMATO JSON OBBLIGATORIO:
 CRITICO: La somma delle duration_seconds deve essere {total_seconds}. Crea esattamente {total_seconds // 6} scene da 6 secondi ciascuna.
 
 Rispondi solo con JSON valido, niente altro testo."""
-
-try:
+    
+    try:
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
         
         # Check if model uses max_completion_tokens (new models) or max_tokens (old models)
