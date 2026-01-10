@@ -24,7 +24,7 @@ hyper-realistic 3D body,
 smooth white featureless face,
 no eyes, no mouth, no expression,"""
 
-def create_gpt_script_request(content, style, character_style, duration_minutes, model):
+def create_gpt_script_request(content, style, character_style, script_structure, duration_minutes, model):
     """Create the request for script generation using OpenAI GPT - Practical approach for 6-second animations"""
     
     total_seconds = duration_minutes * 60
@@ -45,6 +45,13 @@ def create_gpt_script_request(content, style, character_style, duration_minutes,
 
 Stile: {style}
 Personaggio: {character_style}
+Struttura Script: {script_structure}
+
+ISTRUZIONI CRITICHE:
+1. Segui ATTENTAMENTE la Struttura Script fornita: {script_structure}
+2. Rispetta lo Stile Video richiesto: {style}
+3. Applica il Personaggio Style specificato: {character_style}
+4. La somma delle durate deve essere esattamente {total_seconds} secondi
 
 ISTRUZIONI PRATICHE PER ANIMAZIONI GROK:
 1. Durata TOTALE: {duration_minutes} minuti = {total_seconds} secondi
@@ -239,7 +246,7 @@ def main():
         with st.spinner(f"🤖 Sto generando lo script con {model}..."):
             # Call GPT API
             response = create_gpt_script_request(
-                content, video_style, character_style, duration_minutes, model
+                content, video_style, character_style, script_structure, duration_minutes, model
             )
             
             if response:
