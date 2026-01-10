@@ -69,6 +69,15 @@ def load_projects():
     conn.close()
     return projects
 
+def load_project(project_id):
+    """Load specific project from SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM projects WHERE id = ?', (project_id,))
+    project = cursor.fetchone()
+    conn.close()
+    return project
+
 def create_gpt_script_request(content, style, character_style, script_language, duration_minutes, model):
     """Create the request for script generation using OpenAI GPT"""
     
@@ -207,7 +216,21 @@ def main():
             selected_project = st.selectbox("Seleziona Progetto", [""] + project_options)
             
             if selected_project and selected_project != "":
-                st.info("💡 Per modificare scene, usa Scene Builder app")
+                project_index = project_options.index(selected_project)
+                project_id = projects[project_index][0]
+                if st.button("� Carica Progetto", key="load_project"):
+                    project_data = load_project(project_id)
+                    if project_data:
+                        # Load project into session state
+                        st.session_state.generated_scenes = json.loads(project_data[9])  # scenes
+                        st.session_state.generation_info = {
+                            'model': project_data[7],  # model
+                            'duration_minutes': project_data[6],  # duration_minutes
+                            'video_style': project_data[3],  # style
+                            'response_text': f"Progetto caricato: {project_data[1]}"
+                        }
+                        st.success(f"✅ Progetto '{project_data[1]}' caricato!")
+                        st.rerun()
         
         st.divider()
     
