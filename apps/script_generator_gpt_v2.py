@@ -25,83 +25,68 @@ smooth white featureless face,
 no eyes, no mouth, no expression,"""
 
 def create_gpt_script_request(content, style, character_style, duration_minutes, model):
-    """Create the request for script generation using OpenAI GPT"""
+    """Create the request for script generation using OpenAI GPT - Practical approach for 6-second animations"""
     
     total_seconds = duration_minutes * 60
+    scene_duration = 6  # Grok animations are ~6 seconds
+    optimal_scenes = total_seconds // scene_duration
     
-    # Calculate optimal scene structure based on duration
-    if duration_minutes <= 2:
-        optimal_scenes = 2
-        avg_scene_duration = total_seconds // 2
-    elif duration_minutes <= 5:
-        optimal_scenes = 3
-        avg_scene_duration = total_seconds // 3
-    elif duration_minutes <= 10:
-        optimal_scenes = 4
-        avg_scene_duration = total_seconds // 4
-    else:
-        optimal_scenes = 5
-        avg_scene_duration = total_seconds // 5
-    
-    # Direct JSON creation with duration-aware scene structure
-    user_prompt = f"""Crea un video script professionale di ESATTAMENTE {duration_minutes} minuti ({total_seconds} secondi) basato su questa storia: {content}
-
-Stile: {style}
-Personaggio: {character_style}
-
-ISTRUZIONI CRITICHE PER DURATA:
-1. Durata TOTALE: {duration_minutes} minuti = {total_seconds} secondi
-2. Numero ottimale di scene: {optimal_scenes} scene
-3. Durata media per scena: circa {avg_scene_duration} secondi
-4. La somma delle durate DEVE essere esattamente {total_seconds} secondi
-5. Adatta la lunghezza di ogni scena alla durata totale richiesta
-
-REGOLE DI DURATA:
-- Per {duration_minutes} minuti, crea {optimal_scenes} scene ben strutturate
-- Ogni scena dovrebbe durare circa {avg_scene_duration} secondi
-- Scene più importanti possono essere leggermente più lunghe
-- Scene di transizione possono essere leggermente più corte
-- IMPORTANTE: La somma deve essere {total_seconds} secondi
-
-PER OGNI SCENA GENERA:
-- number: numero progressivo (1-{optimal_scenes})
-- title: titolo significativo basato sulla scena
-- duration_seconds: durata in secondi (somma = {total_seconds})
-- image_prompt: DESCRIZIONE MOLTO DETTAGLIATA per AI image generation
-- animation_prompt: descrizione animazioni e movimenti
-- caption: testo caption per la scena
-- sound_effect: effetti sonori specifici
-
-IMPORTANTE per image_prompt:
-1. CONTESTO SPECIFICO: dove si trova la scena, ambiente, periodo storico
-2. ANGOLOLAZIONE CAMERA: close-up, medium shot, wide shot, high angle, low angle, etc.
-3. ELEMENTI AMBIENTALI: dettagli del location, lighting, weather, oggetti
-4. PERSONAGGIO: come appare {character_style} in questo contesto
-5. AZIONE SPECIFICA: cosa sta facendo il personaggio in questa scena (statico, in movimento, interazione)
-6. CONSISTENZA: mantieni stile {style} ma adattato alla scena
-
-ESEMPIO DI STRUTTURA PER {duration_minutes} MINUTI:
-Se {duration_minutes} minuti = {total_seconds} secondi, dividi in {optimal_scenes} scene:
-- Scena 1: introduzione (~{avg_scene_duration}s)
-- Scena 2: sviluppo (~{avg_scene_duration}s)
-- Scena 3: climax/azione (~{avg_scene_duration}s)
-[Altre scene se necessario per raggiungere {optimal_scenes} totali]
-
-FORMATO JSON OBBLIGATORIO:
-{{"scenes": [{{"number": 1, "title": "titolo scena", "duration_seconds": {avg_scene_duration}, "image_prompt": "descrizione dettagliata con contesto, angolazione, elementi ambientali, azione specifica", "animation_prompt": "animazione scena", "caption": "caption scena", "sound_effect": "suoni scena"}}]}}
-
-CRITICO: La somma delle duration_seconds deve essere esattamente {total_seconds}. Adatta il numero di scene e le durate di conseguenza.
-
-Rispondi solo con JSON valido, niente altro testo."""
-
     try:
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
         
         # Check if model uses max_completion_tokens (new models) or max_tokens (old models)
         new_models = ['gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-5-pro', 'gpt-4.1', 'gpt-4.1-mini']
         
+        # Use GPT-4 as fallback if GPT-5.1 doesn't work
+        working_model = 'gpt-4' if model in ['gpt-5.1'] else model
+        
+        # Single prompt with practical scene division
+        user_prompt = f"""Crea un video script professionale di ESATTAMENTE {duration_minutes} minuti ({total_seconds} secondi) basato su questa storia: {content}
+
+Stile: {style}
+Personaggio: {character_style}
+
+ISTRUZIONI PRATICHE PER ANIMAZIONI GROK:
+1. Durata TOTALE: {duration_minutes} minuti = {total_seconds} secondi
+2. Ogni scena dura circa {scene_duration} secondi (animazione Grok)
+3. Numero di scene richieste: {optimal_scenes} scene
+4. La somma delle durate deve essere esattamente {total_seconds} secondi
+
+LOGICA DI DIVISIONE:
+- {duration_minutes} minuti ÷ {scene_duration} secondi = {optimal_scenes} scene
+- Ogni scena = circa {scene_duration} secondi di animazione
+- Scene brevi e dinamiche per Grok
+
+PER OGNI SCENA GENERA:
+- number: numero progressivo (1-{optimal_scenes})
+- title: titolo significativo basato sulla scena
+- duration_seconds: {scene_duration} secondi (per Grok)
+- image_prompt: DESCRIZIONE MOLTO DETTAGLIATA ottimizzata per animazioni Grok 6s
+- animation_prompt: descrizione animazioni fluide e dinamiche (movimenti chiari per 6 secondi)
+- caption: testo caption per la scena
+- sound_effect: effetti sonori specifici
+
+IMPORTANTE per image_prompt (ottimizzato per animazioni Grok da 6s):
+1. CONTESTO SPECIFICO: dove si trova la scena, ambiente, periodo storico
+2. ANGOLOLAZIONE CAMERA: scegli tra close-up, medium shot, wide shot, high angle, low angle, etc.
+3. ELEMENTI AMBIENTALI: dettagli del location, lighting, weather, oggetti
+4. PERSONAGGIO: come appare {character_style} in questo contesto
+5. AZIONE SPECIFICA: cosa sta facendo il personaggio in questa scena (movimento chiaro e definito)
+6. CONSISTENZA: mantieni stile {style} ma adattato alla scena
+7. OTTIMIZZATO PER GROK: scene dinamiche con azioni chiare e movimenti fluidi
+
+ESEMPIO DI image_prompt perfetto per Grok:
+"cinematic professional, medium shot tracking a hyper-realistic faceless human mannequin wearing dark tactical gear moving stealthily through a dimly lit corridor, motion blur suggesting quick movement, shallow depth of field focusing on the mannequin's smooth white featureless face, blue emergency lights casting long shadows on concrete walls, dynamic camera angle following the action, high contrast between the white mannequin and dark environment, hyper-realistic 3D render, action film still"
+
+FORMATO JSON OBBLIGATORIO:
+{{"scenes": [{{"number": 1, "title": "titolo scena", "duration_seconds": {scene_duration}, "image_prompt": "descrizione dettagliata ottimizzata per animazioni Grok 6s", "animation_prompt": "animazione fluida e dinamica", "caption": "caption scena", "sound_effect": "suoni scena"}}]}}
+
+CRITICO: La somma delle duration_seconds deve essere {total_seconds}. Crea esattamente {optimal_scenes} scene da {scene_duration} secondi ciascuna.
+
+Rispondi solo con JSON valido, niente altro testo."""
+
         kwargs = {
-            "model": model,
+            "model": working_model,
             "messages": [
                 {"role": "user", "content": user_prompt}
             ],
@@ -109,10 +94,10 @@ Rispondi solo con JSON valido, niente altro testo."""
         }
         
         # Add appropriate token parameter based on model
-        if any(model.startswith(new_model) for new_model in new_models):
-            kwargs["max_completion_tokens"] = 3000  # Aumento token per prompt dettagliati
+        if any(working_model.startswith(new_model) for new_model in new_models):
+            kwargs["max_completion_tokens"] = 4000  # Aumento token per molte scene
         else:
-            kwargs["max_tokens"] = 3000
+            kwargs["max_tokens"] = 4000
         
         response = client.chat.completions.create(**kwargs)
         return response.choices[0].message.content
@@ -154,14 +139,14 @@ def parse_gpt_response(response_text):
 
 def main():
     st.set_page_config(
-        page_title="Video Script Generator GPT-5.1 (V2 - Duration Fix)",
+        page_title="Video Script Generator GPT-5.1 (V2 - Grok Optimized)",
         page_icon="🎬",
         layout="wide"
     )
     
-    st.title("🎬 Video Script Generator GPT-5.1 (V2 - Duration Fix)")
-    st.markdown("Crea script video professionali con scene correttamente proporzionate alla durata")
-    st.info("🔧 **V2 Bug Fix**: Scene ora proporzionate alla durata reale (5 minuti = scene più lunghe)")
+    st.title("🎬 Video Script Generator GPT-5.1 (V2 - Grok Optimized)")
+    st.markdown("Crea script video professionali con scene ottimizzate per animazioni Grok da 6 secondi")
+    st.info("⚡ **V2 Grok**: Scene dinamiche da 6s (1min=10scene, 5min=50scene) con prompt ottimizzati")
     
     # Initialize session state
     if 'generated_scenes' not in st.session_state:
