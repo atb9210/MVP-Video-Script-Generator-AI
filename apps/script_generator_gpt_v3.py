@@ -405,7 +405,8 @@ def main():
                 # Store in session state
                 st.session_state.generated_scenes = scenes
                 st.session_state.generation_info = {
-                    'model': model,
+                    'script_model': script_model,
+                    'image_model': image_model,
                     'duration_minutes': duration_minutes,
                     'video_style': video_style,
                     'response_text': response
