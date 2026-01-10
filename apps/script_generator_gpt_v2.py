@@ -24,7 +24,7 @@ hyper-realistic 3D body,
 smooth white featureless face,
 no eyes, no mouth, no expression,"""
 
-def create_gpt_script_request(content, style, character_style, duration_minutes, model):
+def create_gpt_script_request(content, style, character_style, script_language, duration_minutes, model):
     """Create the request for script generation using OpenAI GPT"""
     
     total_seconds = duration_minutes * 60
@@ -34,21 +34,23 @@ def create_gpt_script_request(content, style, character_style, duration_minutes,
 
 Stile: {style}
 Personaggio: {character_style}
+Lingua: {script_language}
 
 ISTRUZIONI IMPORTANTI:
 1. Analizza la storia e crea scene logiche per {duration_minutes} minuti
 2. Crea esattamente {total_seconds // 6} scene da 6 secondi cadauna (animazioni Grok)
 3. La somma delle durate deve essere esattamente {total_seconds} secondi
 4. Crea image prompts MOLTO DETTAGLIATI con contesto specifico
+5. Genera l'intero script in {script_language}
 
 PER OGNI SCENA GENERA:
 - number: numero progressivo
-- title: titolo significativo basato sulla scena
+- title: titolo significativo basato sulla scena (in {script_language})
 - duration_seconds: 6 secondi (per animazioni Grok)
-- image_prompt: DESCRIZIONE MOLTO DETTAGLIATA per AI image generation
-- animation_prompt: descrizione animazioni e movimenti
-- caption: testo caption per la scena (DEVE ESSERE DESCRITTIVO E NARRATIVO, minimo 50 caratteri)
-- sound_effect: effetti sonori specifici
+- image_prompt: DESCRIZIONE MOLTO DETTAGLIATA per AI image generation (in {script_language})
+- animation_prompt: descrizione animazioni e movimenti (in {script_language})
+- caption: testo caption per la scena (DEVE ESSERE DESCRITTIVO E NARRATIVO, minimo 50 caratteri, in {script_language})
+- sound_effect: effetti sonori specifici (in {script_language})
 
 IMPORTANTE per image_prompt:
 1. CONTESTO SPECIFICO: dove si trova la scena, ambiente, periodo storico
@@ -172,6 +174,14 @@ def main():
         
         st.header("📝 Input Parameters")
         
+        # Language selection
+        script_language = st.selectbox(
+            "Lingua Script",
+            ["italiano", "English"],
+            index=0,
+            help="Scegli la lingua in cui generare lo script video"
+        )
+        
         # Content input
         content = st.text_area(
             "Contenuto Base",
@@ -230,7 +240,7 @@ def main():
         with st.spinner(f"🤖 Sto generando lo script con {model}..."):
             # Call GPT API
             response = create_gpt_script_request(
-                content, video_style, character_style, duration_minutes, model
+                content, video_style, character_style, script_language, duration_minutes, model
             )
             
             if response:
