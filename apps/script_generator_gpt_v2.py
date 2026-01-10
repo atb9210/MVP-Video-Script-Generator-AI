@@ -47,7 +47,7 @@ PER OGNI SCENA GENERA:
 - duration_seconds: 6 secondi (per animazioni Grok)
 - image_prompt: DESCRIZIONE MOLTO DETTAGLIATA per AI image generation
 - animation_prompt: descrizione animazioni e movimenti
-- caption: testo caption per la scena
+- caption: testo caption per la scena (DEVE ESSERE DESCRITTIVO E NARRATIVO, minimo 50 caratteri)
 - sound_effect: effetti sonori specifici
 
 IMPORTANTE per image_prompt:
@@ -64,7 +64,7 @@ Esempio di image_prompt perfetto:
 FORMATO JSON OBBLIGATORIO:
 {{"scenes": [{{"number": 1, "title": "titolo scena", "duration_seconds": 6, "image_prompt": "descrizione dettagliata con contesto, angolazione, elementi ambientali", "animation_prompt": "animazione scena", "caption": "caption scena", "sound_effect": "suoni scena"}}, {{"number": 2, "title": "titolo scena", "duration_seconds": 6, "image_prompt": "descrizione dettagliata con contesto, angolazione, elementi ambientali", "animation_prompt": "animazione scena", "caption": "caption scena", "sound_effect": "suoni scena"}}]}}
 
-CRITICO: La somma delle duration_seconds deve essere {total_seconds}. Crea esattamente {total_seconds // 6} scene da 6 secondi ciascuna.
+CRITICO: La somma delle duration_seconds deve essere {total_seconds}. Crea esattamente {total_seconds // 6} scene da 6 secondi ciascuna. I caption devono essere descrittivi e narrativi, non brevi e generici!
 
 Rispondi solo con JSON valido, niente altro testo."""
     
