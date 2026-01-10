@@ -30,6 +30,8 @@ def init_db():
     """Initialize SQLite database"""
     conn = sqlite3.connect('video_projects.db')
     cursor = conn.cursor()
+    
+    # Create table if not exists
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,12 +41,28 @@ def init_db():
             character_style TEXT,
             script_language TEXT,
             duration_minutes INTEGER,
-            model TEXT,
+            script_model TEXT,
+            image_model TEXT,
             scenes TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Check if model column exists (for backward compatibility)
+    cursor.execute("PRAGMA table_info(projects)")
+    columns = [column[1] for column in cursor.fetchall()]
+    
+    # Add missing columns for compatibility
+    if 'model' not in columns and 'script_model' not in columns:
+        cursor.execute("ALTER TABLE projects ADD COLUMN model TEXT")
+    
+    if 'script_model' not in columns:
+        cursor.execute("ALTER TABLE projects ADD COLUMN script_model TEXT")
+    
+    if 'image_model' not in columns:
+        cursor.execute("ALTER TABLE projects ADD COLUMN image_model TEXT")
+    
     conn.commit()
     conn.close()
 
