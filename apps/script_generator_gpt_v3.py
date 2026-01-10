@@ -24,7 +24,7 @@ DEFAULT_SCRIPT_STRUCTURE = """- Fatti concreti - anno, evento, nome
 DEFAULT_CHARACTER_STYLE = """a faceless human mannequin,
 hyper-realistic 3D body,
 smooth white featureless face,
-no eyes, no mouth, no expression,""
+no eyes, no mouth, no expression,"""
 
 # Database functions
 def init_db():
