@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import openai
 import os
+import sqlite3
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -23,6 +24,50 @@ DEFAULT_CHARACTER_STYLE = """a faceless human mannequin,
 hyper-realistic 3D body,
 smooth white featureless face,
 no eyes, no mouth, no expression,"""
+
+# Database functions
+def init_db():
+    """Initialize SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            content TEXT NOT NULL,
+            style TEXT,
+            character_style TEXT,
+            script_language TEXT,
+            duration_minutes INTEGER,
+            model TEXT,
+            scenes TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def save_project(name, content, style, character_style, script_language, duration_minutes, model, scenes):
+    """Save project to SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO projects (name, content, style, character_style, script_language, duration_minutes, model, scenes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (name, content, style, character_style, script_language, duration_minutes, model, json.dumps(scenes)))
+    conn.commit()
+    conn.close()
+    return True
+
+def load_projects():
+    """Load all projects from SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM projects ORDER BY updated_at DESC')
+    projects = cursor.fetchall()
+    conn.close()
+    return projects
 
 def create_gpt_script_request(content, style, character_style, script_language, duration_minutes, model):
     """Create the request for script generation using OpenAI GPT"""
@@ -131,6 +176,9 @@ def parse_gpt_response(response_text):
         return []
 
 def main():
+    # Initialize database
+    init_db()
+    
     st.set_page_config(
         page_title="Video Script Generator GPT-5.1 (V2 - Grok Optimized)",
         page_icon="🎬",
@@ -146,6 +194,22 @@ def main():
         st.session_state.generated_scenes = []
     if 'generation_info' not in st.session_state:
         st.session_state.generation_info = {}
+    
+    # Project management sidebar
+    with st.sidebar:
+        st.header("💾 Gestione Progetti")
+        
+        # Load existing projects
+        projects = load_projects()
+        if projects:
+            st.subheader("📂 Progetti Esistenti")
+            project_options = [f"{proj[1]} - {proj[10][:10]}" for proj in projects]  # name - created_at
+            selected_project = st.selectbox("Seleziona Progetto", [""] + project_options)
+            
+            if selected_project and selected_project != "":
+                st.info("💡 Per modificare scene, usa Scene Builder app")
+        
+        st.divider()
     
     # Sidebar for inputs
     with st.sidebar:
@@ -320,7 +384,24 @@ def main():
                             st.code(scene['sound_effect'])
         
         # Export options
-        st.header("💾 Esporta Script")
+        st.header("💾 Salva Progetto")
+        
+        # Save project
+        project_name = st.text_input("Nome Progetto", value=f"Progetto_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        
+        if st.button("💾 Salva Progetto", type="primary"):
+            if project_name and scenes:
+                if save_project(project_name, content, video_style, character_style, script_language, duration_minutes, model, scenes):
+                    st.success(f"✅ Progetto '{project_name}' salvato con successo!")
+                    st.info("💡 Ora puoi aprirlo in Scene Builder per modificare scene e generare immagini")
+                else:
+                    st.error("❌ Errore nel salvataggio del progetto")
+            else:
+                st.error("❌ Inserisci un nome per il progetto")
+        
+        st.divider()
+        
+        st.header("📥 Esporta Script")
         
         # JSON export
         script_json = json.dumps(scenes, indent=2, ensure_ascii=False)
