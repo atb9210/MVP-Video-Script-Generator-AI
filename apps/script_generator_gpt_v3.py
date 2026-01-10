@@ -85,6 +85,10 @@ def create_kie_image_task(prompt):
     
     import requests
     
+    if not KIE_API_KEY:
+        st.error("❌ KIE_API_KEY non configurata! Controlla il file .env")
+        return None
+    
     url = "https://api.kie.ai/api/v1/jobs/createTask"
     headers = {
         "Authorization": f"Bearer {KIE_API_KEY}",
@@ -103,15 +107,37 @@ def create_kie_image_task(prompt):
     }
     
     try:
-        response = requests.post(url, headers=headers, json=data)
+        st.write(f"🔍 Debug: Chiamata API a {url}")
+        st.write(f"🔍 Debug: API Key presente: {'✅' if KIE_API_KEY else '❌'}")
+        st.write(f"🔍 Debug: Prompt lunghezza: {len(prompt)} caratteri")
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        
+        st.write(f"🔍 Debug: Status code: {response.status_code}")
+        st.write(f"🔍 Debug: Response: {response.text[:500]}...")
+        
         if response.status_code == 200:
             result = response.json()
-            return result.get("data", {}).get("taskId")
+            task_id = result.get("data", {}).get("taskId")
+            if task_id:
+                st.success(f"✅ Task creato: {task_id}")
+                return task_id
+            else:
+                st.error("❌ Nessun task ID nella risposta")
+                st.code(response.text)
+                return None
         else:
-            st.error(f"Errore Kie AI: {response.status_code} - {response.text}")
+            st.error(f"❌ Errore Kie AI: {response.status_code}")
+            st.code(response.text)
             return None
+    except requests.exceptions.Timeout:
+        st.error("❌ Timeout: la richiesta ha impiegato troppo tempo")
+        return None
+    except requests.exceptions.ConnectionError:
+        st.error("❌ Errore di connessione a Kie AI")
+        return None
     except Exception as e:
-        st.error(f"Errore connessione Kie AI: {str(e)}")
+        st.error(f"❌ Errore connessione Kie AI: {str(e)}")
         return None
 
 def query_kie_task_status(task_id):
