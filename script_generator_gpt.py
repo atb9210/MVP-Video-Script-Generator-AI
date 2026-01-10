@@ -5,6 +5,10 @@ import time
 from datetime import datetime
 import openai
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
