@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import openai
 import os
+import sqlite3
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -23,7 +24,61 @@ DEFAULT_SCRIPT_STRUCTURE = """- Fatti concreti - anno, evento, nome
 DEFAULT_CHARACTER_STYLE = """a faceless human mannequin,
 hyper-realistic 3D body,
 smooth white featureless face,
-no eyes, no mouth, no expression,"""
+no eyes, no mouth, no expression,""
+
+# Database functions
+def init_db():
+    """Initialize SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            content TEXT NOT NULL,
+            style TEXT,
+            character_style TEXT,
+            script_language TEXT,
+            duration_minutes INTEGER,
+            script_model TEXT,
+            image_model TEXT,
+            scenes TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def save_project(name, content, style, character_style, script_language, duration_minutes, script_model, image_model, scenes):
+    """Save project to SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO projects (name, content, style, character_style, script_language, duration_minutes, script_model, image_model, scenes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (name, content, style, character_style, script_language, duration_minutes, script_model, image_model, json.dumps(scenes)))
+    conn.commit()
+    conn.close()
+    return True
+
+def load_projects():
+    """Load all projects from SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM projects ORDER BY updated_at DESC')
+    projects = cursor.fetchall()
+    conn.close()
+    return projects
+
+def load_project(project_id):
+    """Load specific project from SQLite database"""
+    conn = sqlite3.connect('video_projects.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM projects WHERE id = ?', (project_id,))
+    project = cursor.fetchone()
+    conn.close()
+    return project
 
 def create_kie_image_task(prompt):
     """Create image generation task using Kie AI Nano Banana Pro"""
@@ -188,6 +243,9 @@ def parse_gpt_response(response_text):
         return []
 
 def main():
+    # Initialize database
+    init_db()
+    
     st.set_page_config(
         page_title="Video Script Generator GPT-5.1 (V3 - AI Multi-Model)",
         page_icon="🎬",
@@ -203,6 +261,32 @@ def main():
         st.session_state.generated_scenes = []
     if 'generation_info' not in st.session_state:
         st.session_state.generation_info = {}
+    if 'current_project_id' not in st.session_state:
+        st.session_state.current_project_id = None
+    
+    # Project management sidebar
+    with st.sidebar:
+        st.header("💾 Gestione Progetti")
+        
+        # Load existing projects
+        projects = load_projects()
+        if projects:
+            st.subheader("📂 Progetti Esistenti")
+            project_options = [f"{proj[1]} - {proj[10]}" for proj in projects]  # name - created_at
+            selected_project = st.selectbox("Seleziona Progetto", [""] + project_options)
+            
+            if selected_project and selected_project != "":
+                project_index = project_options.index(selected_project)
+                project_id = projects[project_index][0]
+                if st.button("📂 Carica Progetto", key="load_project"):
+                    project_data = load_project(project_id)
+                    if project_data:
+                        st.session_state.current_project_id = project_id
+                        st.session_state.generated_scenes = json.loads(project_data[9])  # scenes
+                        st.success(f"✅ Progetto '{project_data[1]}' caricato!")
+                        st.rerun()
+        
+        st.divider()
     
     # Sidebar for inputs
     with st.sidebar:
@@ -420,7 +504,34 @@ def main():
                             st.code(scene['sound_effect'])
         
         # Export options
-        st.header("💾 Esporta Script")
+        st.header("💾 Salva Progetto")
+        
+        # Save project
+        project_name = st.text_input("Nome Progetto", value=f"Progetto_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        
+        col_save1, col_save2 = st.columns(2)
+        with col_save1:
+            if st.button("💾 Salva Progetto", type="primary"):
+                if project_name and scenes:
+                    if save_project(project_name, content, video_style, character_style, script_language, duration_minutes, script_model, image_model, scenes):
+                        st.success(f"✅ Progetto '{project_name}' salvato con successo!")
+                        st.session_state.current_project_id = None  # Reset current project
+                    else:
+                        st.error("❌ Errore nel salvataggio del progetto")
+                else:
+                    st.error("❌ Inserisci un nome per il progetto")
+        
+        with col_save2:
+            if st.button("🆕 Nuovo Progetto"):
+                st.session_state.generated_scenes = []
+                st.session_state.current_project_id = None
+                st.session_state.generation_info = {}
+                st.success("✅ Nuovo progetto creato!")
+                st.rerun()
+        
+        st.divider()
+        
+        st.header("📥 Esporta Script")
         
         # JSON export
         script_json = json.dumps(scenes, indent=2, ensure_ascii=False)
