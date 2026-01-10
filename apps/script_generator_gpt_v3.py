@@ -359,10 +359,43 @@ def main():
                     if scene.get('image_prompt'):
                         st.subheader("🖼️ Prompt Immagine")
                         st.code(scene['image_prompt'], language='text')
-                        # Copy button with unique key
-                        if st.button(f"📋 Copia Prompt Immagine {i}", key=f"img_{i}"):
-                            st.write("📋 Copiato!")
-                            st.code(scene['image_prompt'])
+                        # Buttons row
+                        col_btn1, col_btn2 = st.columns(2)
+                        with col_btn1:
+                            if st.button(f"📋 Copia Prompt {i}", key=f"img_{i}"):
+                                st.write("📋 Copiato!")
+                                st.code(scene['image_prompt'])
+                        with col_btn2:
+                            if st.button(f"🎨 Genera Immagine {i}", key=f"gen_img_{i}"):
+                                with st.spinner(f"🎨 Generando immagine per scena {i}..."):
+                                    task_id = create_kie_image_task(scene['image_prompt'])
+                                    if task_id:
+                                        st.success(f"✅ Task creato: {task_id}")
+                                        st.info("⏳ In attesa del risultato...")
+                                        
+                                        # Poll for result
+                                        import time
+                                        for _ in range(30):  # 30 tentativi
+                                            result = query_kie_task_status(task_id)
+                                            if result:
+                                                state = result.get('state')
+                                                if state == 'success':
+                                                    result_json = result.get('resultJson', '{}')
+                                                    import json as json_lib
+                                                    result_data = json_lib.loads(result_json)
+                                                    urls = result_data.get('resultUrls', [])
+                                                    if urls:
+                                                        st.image(urls[0], caption=f"Scena {i}: {scene.get('title', '')}")
+                                                        st.success("🎉 Immagine generata con successo!")
+                                                    break
+                                                elif state == 'fail':
+                                                    st.error(f"❌ Errore: {result.get('failMsg', 'Errore sconosciuto')}")
+                                                    break
+                                            time.sleep(2)  # Aspetta 2 secondi
+                                        else:
+                                            st.warning("⏱️ Timeout: la generazione sta richiedendo più tempo del previsto.")
+                                    else:
+                                        st.error("❌ Errore nella creazione del task")
                     
                     if scene.get('animation_prompt'):
                         st.subheader("🎭 Prompt Animazione")
