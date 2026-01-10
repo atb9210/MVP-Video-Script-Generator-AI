@@ -418,7 +418,7 @@ def main():
         info = st.session_state.generation_info
         
         # Display results
-        st.success(f"✅ Script generato con {len(scenes)} scene usando {info['model']}!")
+        st.success(f"✅ Script generato con {len(scenes)} scene usando {info['script_model']}!")
         
         # Summary
         col1, col2, col3 = st.columns(3)
