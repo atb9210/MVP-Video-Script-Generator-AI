@@ -418,7 +418,8 @@ def main():
         info = st.session_state.generation_info
         
         # Display results
-        st.success(f"✅ Script generato con {len(scenes)} scene usando {info['script_model']}!")
+        script_model = info.get('script_model', info.get('model', 'N/A'))
+        st.success(f"✅ Script generato con {len(scenes)} scene usando {script_model}!")
         
         # Summary
         col1, col2, col3 = st.columns(3)
@@ -428,7 +429,7 @@ def main():
             total_duration = sum(scene.get('duration_seconds', 0) for scene in scenes)
             st.metric("Durata Totale", f"{total_duration} secondi")
         with col3:
-            st.metric("Target", f"{info['duration_minutes']} minuti")
+            st.metric("Target", f"{info.get('duration_minutes', 'N/A')} minuti")
         
         # Display each scene
         st.header("📋 Scene Generate")
