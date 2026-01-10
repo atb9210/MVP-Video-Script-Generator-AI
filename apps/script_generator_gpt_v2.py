@@ -43,14 +43,16 @@ def create_gpt_script_request(content, style, character_style, script_structure,
         # Single prompt with practical scene division
         user_prompt = f"""Crea un video script professionale di ESATTAMENTE {duration_minutes} minuti ({total_seconds} secondi) basato su questa storia: {content}
 
-Stile: {style}
-Personaggio: {character_style}
+Stile Video: {style}
+Stile Personaggio (aspetto visivo): {character_style}
 Struttura Script: {script_structure}
 
+IMPORTANTE: Il character_style descrive SOLO l'aspetto visivo dei personaggi, non chi sono! I personaggi reali sono quelli menzionati nella storia (es: Leonardo Notarbartolo e la sua banda).
+
 ISTRUZIONI CRITICHE:
-1. Segui ATTENTAMENTE la Struttura Script fornita: {script_structure}
-2. Rispetta lo Stile Video richiesto: {style}
-3. Applica il Personaggio Style specificato: {character_style}
+1. Segui ATTENTAMENTE la Struttura Script: {script_structure}
+2. Rispetta lo Stile Video: {style}
+3. Applica l'aspetto visivo {character_style} ai personaggi reali della storia
 4. La somma delle durate deve essere esattamente {total_seconds} secondi
 
 ISTRUZIONI PRATICHE PER ANIMAZIONI GROK:
